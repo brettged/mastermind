@@ -42,7 +42,7 @@ def randCode():
 def userCode():
     print "You have chosen to create the secret code! \n" \
            "The color choices are: \n \n" \
-           " white \n black \n red \n blue \n yellow \n green"
+           " white \n black \n red \n blue \n yellow \n green \n"
            
     color1 = Peg(raw_input("Enter color for first position: "))
     color2 = Peg(raw_input("Enter color for second position: "))
@@ -151,13 +151,15 @@ def playMasterMind():
 
     if codeGen == 'y':
         codeGen = 'cpu'
+        code = Code(codeGen)
+        raw_input("The computer has created a code, please press Enter to begin guessing: ")
     else:
         codeGen = 'user'
+        code = Code(codeGen)
 
-    code = Code(codeGen)  
-    
-    raw_input("The computer has created a code, please press Enter to begin guessing: ")
-    
+    if codeGen == 'cpu':
+        raw_input("The computer has created a code, please press Enter to begin guessing: ")
+
     print "Color choices are: black, white, red, blue, green, and yellow "
     while True:
         
