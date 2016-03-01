@@ -1,195 +1,178 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb  2 18:59:28 2016
 
-@author: brett
-"""
+
 import random
 
 class Peg(object):
-
+    
     def __init__(self, color):
         self.color = color
-
     def __eq__(self, other):
         return self.color == other
-
     def __str__(self):
         return self.color
-
+    def __hash__(self):
+        return 0
+        
     def getColor(self):
         return self.color
 
-black = Peg('black')
-white = Peg('white')
-red = Peg('red')
-blue = Peg('blue')
-green = Peg('green')
-yellow = Peg('yellow')
+class PegBank(object):
+    
+    def __init__(self):
+        self.bank = []
+    def __iter__(self):
+        return iter(self.bank)
+    def __getitem__(self, i):
+        return self.bank[i]
+        
+    def populate(self):
+        black = Peg('black')
+        white = Peg('white')
+        blue = Peg('blue')
+        red = Peg('red')
+        green = Peg('green')
+        yellow = Peg('yellow')
+        colorList = [black, white, blue, red, green, yellow]
+        for peg in colorList:
+            self.bank.append(peg)
 
-pegBank = [black, white, red, blue, green, yellow]
-
-
-# Have the computer choose a random code
-def randCode():
-    code = []
-    for i in range(4):
-        code.append(random.choice(pegBank))
-    return code
-
-# Has the user choose a code, prompts for the color
-# to go at each position
-def userCode():
-    print "You have chosen to create the secret code! \n" \
-           "The color choices are: \n \n" \
-           " white \n black \n red \n blue \n yellow \n green \n"
-
-    color1 = Peg(raw_input("Enter color for first position: "))
-    color2 = Peg(raw_input("Enter color for second position: "))
-    color3 = Peg(raw_input("Enter color for third position: "))
-    color4 = Peg(raw_input("Enter color for fourth position: "))
-    code = [color1, color2, color3, color4]
-    return code
-
-class Guess(object):
-
-    def __init__(self, g1, g2, g3, g4):
-
-        self.guess = [Peg(g1), Peg(g2), Peg(g3), Peg(g4)]
-
-    def showGuess(self):
-        for g in self.guess:
-            print g
-
-    def iterGuess(self):
-        return self.guess
-
-    def __eq__(self, other):
-        return self.guess == other
-
-class Code(object):
-
-    def __init__(self, code):
-
-        if code == 'cpu':
-            self.code = randCode()
-        elif code == 'user':
-            self.code = userCode()
-
-    def showCode(self):
-        for c in self.code:
-            print c
-
-    def colorCount(self):
-
-        count = {}
-
-        for color in self.code:
-            if color in count:
-                count[color] += 1
-            else:
-                count[color] = 1
-        return count
-
-    def checkGuess(self, code, guess):
-
-        codeCount = code.colorCount()
-        clueList = []
-        codeList = code.iterCode()
-        guessList = guess.iterGuess()
-        guessIndex = 0
-
-        for guessColor in guessList:
-            codeIndex = 0
-            for codeColor in codeList:
-                if guessColor == codeColor:
-                    if guessIndex == codeIndex:
-                        codeCount[codeColor] -= 1
-                        if codeCount[codeColor] == 0:
-                            del codeCount[codeColor]
-                        clueList.append('red')
-                codeIndex += 1
-            guessIndex += 1
-
-        for guessColor in guessList:
-            if guessColor in codeCount.keys():
-                r = codeCount.keys().index(guessColor)
-                codeKey = codeCount.keys()[r]
-                clueList.append('white')
-                codeCount[codeKey] -= 1
-
-                if codeCount[codeKey] == 0:
-                    del codeCount[codeKey]
-        print clueList
-    def iterCode(self):
-        return self.code
-    def __eq__(self, other):
-        return self.code == other
-
-
-class MasterMind(object):
+class Sequence(object):
 
     def __init__(self):
-        self.gameLog = []
+        self.pegList = []
+    def __getitem__(self, index):
+        return self.pegList[index]
+    def __iter__(self):
+        return iter(self.pegList)
 
-    def playMasterMind():
-        #game = MasterMind()
+    def addPeg(self, peg):
+        self.pegList.append(peg)
+        
+    def colorCount(self):
+        countDict = {}
+        for peg in self.pegList:
+            #p = peg.getColor()
+            if peg not in countDict:
+                countDict[peg] = 1
+            else:
+                countDict[peg] += 1
+        return countDict
+    
+class Code(Sequence):
+    
+    def randCode(self, pegBank):
+        for i in range(4):
+            j = random.choice([0,1,2,3,4,5])
+            self.addPeg(pegBank[j])
+    
+    def userCode(self):
+        userColors = input("Enter four colors: ")
+        parsed = userColors.split()
+        
+        for color in parsed:
+            if color not in ["white", "black", "blue", "red", "green", "yellow"]:
+                print("'{0}' is not a valid color. \n".format(color))
+                print("Please pick from: white, black, blue, red, green, or yellow")
+                userColors = input("Enter four colors: ")
+                parsed = userColors.split()
+        for i in parsed:
+            self.addPeg(Peg(i))
 
-        numGuesses = 0
-        print "Welcome to virtual MasterMind!"
-        raw_input("Press Enter to continue: ")
-        codeGen = raw_input("Would you like to play against the computer? (y or n) ")
+class Guess(Sequence):
+    
+    def guess(self):
+        userColors = input("Enter your guess: ")
+        parsed = userColors.split()
+        
+        for color in parsed:
+            if color not in ["white", "black", "blue", "red", "green", "yellow"]:
+                print("'{0}' is not a valid color. \n".format(color))
+                print("Please pick from: white, black, blue, red, green, or yellow")
+                userColors = input("Enter your guess: ")
+                parsed = userColors.split()
+        for i in parsed:
+            self.addPeg(Peg(i))
 
-        if codeGen == 'y':
-            codeGen = 'cpu'
-            code = Code(codeGen)
-            raw_input("The computer has created a code, please press Enter to begin " \
-                      "guessing: ")
-        else:
-            codeGen = 'user'
-            code = Code(codeGen)
+    def compGuess(self):
+        pass
 
-        print "Color choices are: black, white, red, blue, green, and yellow \n"
-        while True:
+class Clue(object):
+    
+    def __init__(self):
+        self.clue = []
+        self.indexList = []
+    def __str__(self):
+        return self.clue
+        
+    def check(self, code, guess):
+        guesscolors = guess.colorCount()
+        codecolors = code.colorCount()
+        indexList = []
+        
+        for i in range(4):
+            if guess[i] == code[i]:
+                codecolors[code[i]] -= 1
+                self.clue.append('red')
+                if codecolors[code[i]] == 0:
+                    del codecolors[code[i]]
+            else:
+                indexList.append(i)
+        
+        # print(indexList)
+        
+        for i in indexList:
+            if guess[i] in codecolors:
+                self.clue.append('white')
+                codecolors[guess[i]] -= 1
+                if codecolors[guess[i]] == 0:
+                    del codecolors[guess[i]]
+        # print(self.clue)
+        return self.clue
+        
+class GamePlay(object):
+    
+    def __init__(self, bank):
+        
+        self.bank = PegBank()
+        self.bank.populate()
+        
+    def play(self):
+        pass
+        
+    def guessCheck(self, clue):
+        pass
+        
+    def quit(self):
+        pass
+    
+# def main():
+#
+#     print ("sup bro-beans")
+#
+# if __name__ == '__main__':
+#     main()
+    
+a = PegBank()
+a.populate()
+b = Code()
+b.randCode(a)
+for i in range(4):
+    print(b[i])
 
-            g = raw_input("Enter Guess (or 'q' to quit): ")
-            if g == "q":
-                quit()
-            gParse = g.split()
-            userGuess = Guess(gParse[0], gParse[1], gParse[2], gParse[3])
-            code.checkGuess(code, userGuess)
-            numGuesses += 1
+#print(b.colorCount())
 
-            while userGuess != code:
-                g = raw_input("Next Guess (or 'q' to quit: ")
-                if g == "q":
-                    quit()
-                gParse = g.split()
-                userGuess = Guess(gParse[0], gParse[1], gParse[2], gParse[3])
-                code.checkGuess(code, userGuess)
-                numGuesses += 1
-                if userGuess == code:
-                    self.gameLog.append(numGuesses)
-                    break
-            break
-        print "Congratulations! \n" \
-              "You solved the code in \n" \
-              "%s guesses" % numGuesses
-        playAgain = raw_input("Would you like to play again? (y or n) ")
-
-        if playAgain == 'y':
-            self.gameLog.playMasterMind()
-
-        else:
-            print "Goodbye!"
-
-    playMasterMind()
+myGuess = Guess()
+myGuess.guess()
+check = Clue()
+check.check(b, myGuess)
 
 
-def main():
-
-    game = MasterMind()
-    game.playMasterMind()
-
-if __name__ == '__main__':
-    main()
+    
+# c = Code()
+# c.userCode()
+#
+# for i in range(4):
+#     print(c[i])
+    
+    
+    
